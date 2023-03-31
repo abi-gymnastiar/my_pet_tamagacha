@@ -6,9 +6,9 @@ import java.awt.image.BufferedImage;
 
 public class Entity {
     public GamePanel gp;
-    public int x, y;
+    public int x, y, spriteCounter, spriteNum, tick;
 
-    public BufferedImage sprite;
+    //public BufferedImage sprite;
 
     public Entity(GamePanel gp)
     {

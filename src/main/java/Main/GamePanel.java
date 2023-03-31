@@ -17,6 +17,7 @@ public class GamePanel extends JPanel implements Runnable{
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setDoubleBuffered(true);
         this.setFocusable(true);
+        gameStartThread();
     }
 
     public void gameStartThread() {
@@ -56,14 +57,14 @@ public class GamePanel extends JPanel implements Runnable{
 
     public void update()
     {
-
+        pet.update();
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
 
-        g.setColor(Color.blue);
+        //g.setColor(Color.white);
         g.fillRect(0, 0, screenWidth, screenHeight);
 
         pet.draw(g2);
