@@ -5,7 +5,7 @@ import Entity.Pet;
 import javax.swing.JPanel;
 import java.awt.*;
 
-public class GamePanel extends JPanel implements Runnable{
+public class MainPanel extends JPanel implements Runnable{
     public int screenWidth = 480;
     public int screenHeight = 480;
     final int fps = 60;
@@ -13,7 +13,7 @@ public class GamePanel extends JPanel implements Runnable{
 
     Pet pet = new Pet(this);
 
-    GamePanel() {
+    MainPanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
         this.setDoubleBuffered(true);
         this.setFocusable(true);

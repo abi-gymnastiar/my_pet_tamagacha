@@ -1,17 +1,15 @@
 package Entity;
 
-import Main.GamePanel;
-
-import java.awt.image.BufferedImage;
+import Main.MainPanel;
 
 public class Entity {
-    public GamePanel gp;
+    public MainPanel mp;
     public int x, y, spriteCounter, spriteNum, tick;
 
     //public BufferedImage sprite;
 
-    public Entity(GamePanel gp)
+    public Entity(MainPanel mp)
     {
-        this.gp = gp;
+        this.mp = mp;
     }
 }
