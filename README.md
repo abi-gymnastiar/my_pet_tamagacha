@@ -12,4 +12,5 @@ Some interaction and behavior available as of right now includes:
 - 🐱‍👓 Tama can eat if her bowl is not empty
 - 🍽️ Tama's bowl can be refilled by clicking on the empty bowl
 - 🐱‍🏍Tama can be dragged around the screen (if she gets dragged outside the screen, she will simply walk back)
+- 🛏️ Tama will sleep if he's tired
 - 🐱‍💻More will be added soon... 🐾🐾🐾🐾🐾

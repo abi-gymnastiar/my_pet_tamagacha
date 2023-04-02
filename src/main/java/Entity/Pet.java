@@ -16,18 +16,21 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
     BufferedImage sprite, idle1, idle2, walk1, walk2, walk3, walk4,
                     walkLeft1, walkLeft2, walkLeft3, walkLeft4,
                     idleLeft1, idleLeft2, grab, grabLeft, grab2,
-                    grabLeft2;
+                    grabLeft2, sleeping0, sleeping1, sleeping2,
+                    sleepingLeft0, sleepingLeft1, sleepingLeft2,
+                    stretching0, stretchingLeft0;
     String direction, status;
     Random random = new Random();
     int speed, counter, spriteTick, mouseXOffset, mouseYOffset,
             petWidth, petHeight, xCollision, yCollision,
-            fallingSpeed, xMouseGrab, yMouseGrab;
+            fallingSpeed, xMouseGrab, yMouseGrab, sleepTimer,
+            sleepTicker;
     int randomNum = 6;
     Bowl bowl;
     public Pet(MainPanel mp)
     {
         super(mp);
-        getPetImage();
+        setPetImages();
         setInitialConditions();
         bowl = new Bowl(this.mp, 360, (y+64));
         bowl.setBowlFull();
@@ -45,9 +48,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         petHeight = idle1.getHeight();
         direction = "right";
         fallingSpeed = 7;
+        sleepTimer = 3600;
     }
 
-    public void getPetImage()
+    public void setPetImages()
     {
         try {
             File file = new File("src/main/java/Assets/idle/idle_1.png");
@@ -82,6 +86,22 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             grab2 = ImageIO.read(file);
             file = new File("src/main/java/Assets/grab/cat_grab_left2.png");
             grabLeft2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_0.png");
+            sleeping0 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_1.png");
+            sleeping1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_2.png");
+            sleeping2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_Left_0.png");
+            sleepingLeft0 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_Left_1.png");
+            sleepingLeft1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/sleep/sleeping_Left_2.png");
+            sleepingLeft2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/stretch/stretching_0.png");
+            stretching0 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/stretch/stretching_Left_0.png");
+            stretchingLeft0 = ImageIO.read(file);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -92,8 +112,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         //System.out.println(xCollision);
         counter++;
         //System.out.println(counter);
-        if (counter % 30 == 0)
+        if (counter % 30 == 0) {
             tick++;
+            sleepTicker++;
+        }
         spriteCounter++;
         if (spriteCounter > 30) {
             if (spriteNum == 1)  spriteNum = 2;
@@ -102,12 +124,20 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             else if (spriteNum == 4)  spriteNum = 1;
             spriteCounter = 0;
         }
-
         //System.out.println(tick);
+        //System.out.println(sleepTicker);
+
+        // starts walking or sleeping
         if (status == "idle" && tick == randomNum) {
-            status = "walk";
-            tick = 0;
-            randomNum = random.nextInt(3, 7);
+            if (randomNum == 15 || sleepTicker > sleepTimer) {
+                status = "startSleeping";
+                tick = 0;
+                sleepTicker = 0;
+            } else {
+                status = "walk";
+                tick = 0;
+                randomNum = random.nextInt(3, 7);
+            }
         }
         if (status == "walk" && tick == randomNum) {
             status = "idle";
@@ -121,17 +151,30 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             randomNum = 20;
         }
         if (status == "eat" && tick == randomNum) {
-            status = "walk";
-            tick = 0;
             randomNum = random.nextInt(3, 7);
-            bowl.setBowlEmpty();
-            bowl.foodStatus = "empty";
+            // will start sleeping after eating
+            if (randomNum == 4) {
+                status = "startSleeping";
+                tick = 0;
+                sleepTicker = 0;
+                bowl.setBowlEmpty();
+                bowl.foodStatus = "empty";
+            }
+            // walking after eating
+            else {
+                status = "walk";
+                tick = 0;
+                bowl.setBowlEmpty();
+                bowl.foodStatus = "empty";
+            }
         }
+        // if falling under the floor
         if (status == "falling") {
             if (yCollision >= (mp.screenHeight - 40)) {
                 status = "tpToFloorY";
             }
         }
+        // tp the pet back to floor
         if (status == "tpToFloorY") {
             y = mp.screenHeight - (idle1.getHeight() + 40);
             tick = 0;
@@ -151,6 +194,23 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             direction = "left";
             status = "walk";
             randomNum = 7;
+        }
+        // set sleep timer and the next sleepTimer
+        if (status == "startSleeping" && tick == 1) {
+            status = "sleeping";
+            tick = 0;
+            randomNum = random.nextInt(300, 2400);
+            sleepTimer = 5000;
+        }
+        // stop sleeping
+        if (status == "sleeping" && tick == randomNum) {
+            status = "stopSleeping";
+            tick = 0;
+        }
+        if (status == "stopSleeping" && tick == 1) {
+            status = "idle";
+            tick = 0;
+            randomNum = random.nextInt(10, 30);
         }
     }
 
@@ -212,6 +272,20 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 } else if (direction == "left") {
                     if (spriteNum == 1 || spriteNum == 3) { sprite = idleLeft1; }
                     if (spriteNum == 2 || spriteNum == 4) { sprite = idleLeft2; }
+                }
+                break;
+            case "startSleeping": // case "startSleeping" and
+            case "stopSleeping":  // stop "stopSleeping" are merged
+                if (direction == "right") {sprite = sleeping0;}
+                else if (direction == "left") {sprite = sleepingLeft0;}
+                break;
+            case "sleeping":
+                if (direction == "right") {
+                    if (spriteNum == 1 || spriteNum == 2) { sprite = sleeping1; }
+                    if (spriteNum == 3 || spriteNum == 4) { sprite = sleeping2; }
+                } else if (direction == "left") {
+                    if (spriteNum == 1 || spriteNum == 2) { sprite = sleepingLeft1; }
+                    if (spriteNum == 3 || spriteNum == 4) { sprite = sleepingLeft2; }
                 }
                 break;
         }
