@@ -18,7 +18,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     idleLeft1, idleLeft2, grab, grabLeft, grab2,
                     grabLeft2, sleeping0, sleeping1, sleeping2,
                     sleepingLeft0, sleepingLeft1, sleepingLeft2,
-                    stretching0, stretchingLeft0;
+                    stretching0, stretchingLeft0, sit1, sit2,
+                    sitLeft1, sitLeft2;
     String direction, status;
     Random random = new Random();
     int speed, counter, spriteTick, mouseXOffset, mouseYOffset,
@@ -102,6 +103,14 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             stretching0 = ImageIO.read(file);
             file = new File("src/main/java/Assets/stretch/stretching_Left_0.png");
             stretchingLeft0 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/idle/sit_1.png");
+            sit1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/idle/sit_2.png");
+            sit2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/idle/sit_Left_1.png");
+            sitLeft1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/idle/sit_Left_2.png");
+            sitLeft2 = ImageIO.read(file);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -129,27 +138,34 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
 
         // starts walking or sleeping
         if (status == "idle" && tick == randomNum) {
-            if (randomNum == 15 || sleepTicker > sleepTimer) {
+            if (sleepTicker > sleepTimer) {
                 status = "startSleeping";
                 tick = 0;
                 sleepTicker = 0;
+            } else if (random.nextInt(8) == 2) {
+                status = "sit";
+                tick = 0;
+                randomNum = random.nextInt(30, 360);
             } else {
                 status = "walk";
                 tick = 0;
                 randomNum = random.nextInt(3, 7);
             }
         }
+        // idle after walking
         if (status == "walk" && tick == randomNum) {
             status = "idle";
             tick = 0;
             randomNum = random.nextInt(10, 30);
         }
+        // start eating when pet collide with a full bowl
         if (status == "walk" && direction == "right" &&
                 xCollision == bowl.x && bowl.foodStatus == "full") {
             status = "eat";
             tick = 0;
             randomNum = 20;
         }
+        // start sleeping or walk after eating
         if (status == "eat" && tick == randomNum) {
             randomNum = random.nextInt(3, 7);
             // will start sleeping after eating
@@ -207,10 +223,17 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             status = "stopSleeping";
             tick = 0;
         }
+        // idle after stopSleeping
         if (status == "stopSleeping" && tick == 1) {
             status = "idle";
             tick = 0;
             randomNum = random.nextInt(10, 30);
+        }
+        // getting up from sitting
+        if (status == "sit" && tick == randomNum) {
+            status = "idle";
+            tick = 0;
+            randomNum = 2;
         }
     }
 
@@ -288,6 +311,14 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     if (spriteNum == 3 || spriteNum == 4) { sprite = sleepingLeft2; }
                 }
                 break;
+            case "sit":
+                if (direction == "right") {
+                    if (spriteNum == 1 || spriteNum == 3) { sprite = sit1; }
+                    if (spriteNum == 2 || spriteNum == 4) { sprite = sit2; }
+                } else if (direction == "left") {
+                    if (spriteNum == 1 || spriteNum == 3) { sprite = sitLeft1; }
+                    if (spriteNum == 2 || spriteNum == 4) { sprite = sitLeft2; }
+                }
         }
         g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
         g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
