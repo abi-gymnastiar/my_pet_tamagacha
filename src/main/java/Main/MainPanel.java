@@ -45,7 +45,7 @@ public class MainPanel extends JPanel implements Runnable{
             if (delta >= 1)
             {
                 //UPDATE
-                update();
+                update((float) delta);
                 //DRAW SCREEN
                 repaint();
 
@@ -55,9 +55,9 @@ public class MainPanel extends JPanel implements Runnable{
         }
     }
 
-    public void update()
+    public void update(float dt)
     {
-        pet.update();
+        pet.update(dt);
     }
 
     public void paintComponent(Graphics g) {

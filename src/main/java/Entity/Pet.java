@@ -1,6 +1,8 @@
 package Entity;
 
 import Main.MainPanel;
+import Physics.primitives.Circle;
+import org.joml.Vector2f;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -27,7 +29,12 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             fallingSpeed, xMouseGrab, yMouseGrab, sleepTimer,
             sleepTicker;
     int randomNum = 6;
-    Bowl bowl;
+    Bowl bowl; Ball ball;
+    private int lastMouseX;
+    private int lastMouseY;
+    private float velX;
+    private float velY;
+
     public Pet(MainPanel mp)
     {
         super(mp);
@@ -116,7 +123,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         }
     }
 
-    public void update() {
+    public void update(float dt) {
         xCollision = x+petWidth; yCollision = y+petHeight;
         //System.out.println(xCollision);
         counter++;
@@ -235,6 +242,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             tick = 0;
             randomNum = 2;
         }
+        if (ball != null) {
+            this.ball.update(dt, mp.screenWidth, mp.screenHeight);
+        }
+
     }
 
     @Override
@@ -320,6 +331,14 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     if (spriteNum == 2 || spriteNum == 4) { sprite = sitLeft2; }
                 }
         }
+        if (ball != null) {
+            g2.drawImage(ball.sprite, (int) ball.getPosition().x, (int) ball.getPosition().y, (int) ball.getRadius(), (int) ball.getRadius(), null);
+            if (ball.ballGrab) {
+
+                ball.position.x = xMouseGrab;
+                ball.position.y = yMouseGrab;
+            }
+        }
         g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
         g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
     }
@@ -343,8 +362,12 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 bowl.foodStatus = "full";
             }
         }
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            ball = new Ball (mp, 40,
+                    new Vector2f(mouseX, mouseY),
+                    new Vector2f(0, 0), 1);
+        }
     }
-
     @Override
     public void mousePressed(MouseEvent e) {
         if (e.getButton() == MouseEvent.BUTTON1) {
@@ -358,24 +381,38 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 xMouseGrab = mouseX - 64;
                 yMouseGrab = mouseY - 16;
                 status = "grab";
-            }
-            if (mouseX >= (x+32) && mouseX <= (x + idle1.getWidth()-32) &&
+            } else if (mouseX >= (x+32) && mouseX <= (x + idle1.getWidth()-32) &&
                     mouseY >= (y+32) && mouseY <= (y + idle1.getHeight()-32)
                     && direction == "left") {
                 xMouseGrab = mouseX - 64;
                 yMouseGrab = mouseY - 16;
                 status = "grab";
+            } else if ((mouseX >= ball.getPosition().x && mouseX <= (ball.getPosition().x + ball.getRadius()) &&
+                    mouseY >= ball.getPosition().y && mouseY <= (ball.getPosition().y + ball.getRadius()))) {
+                xMouseGrab = mouseX;
+                yMouseGrab = mouseY;
+                ball.ballGrab = true;
             }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        int mouseX = e.getX();
+        int mouseY = e.getY();
         if (e.getButton() == MouseEvent.BUTTON1 && status == "grab") {
             if (yCollision < (mp.screenHeight - 40))
                 status = "falling";
             else
                 status = "tpToFloorY";
+        }
+        if (ball != null && e.getButton() == MouseEvent.BUTTON1 && ball.ballGrab) {
+            ball.ballGrab = false;
+            ball.acceleration.x = 0;
+            ball.acceleration.y = 0;
+            // set the ball's velocity to the calculated values
+            ball.velocity.x = velX;
+            ball.velocity.y = velY;
         }
     }
 
@@ -396,6 +433,18 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         if (status == "grab") {
             xMouseGrab = mouseX - 64;
             yMouseGrab = mouseY - 16;
+        }
+        if (ball != null && ball.ballGrab) {
+            xMouseGrab = mouseX;
+            yMouseGrab = mouseY;
+            int dx = mouseX - lastMouseX;
+            int dy = mouseY - lastMouseY;
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+
+            // calculate velocity based on change in mouse position
+            velX = dx / 10.0f; // adjust scale as needed
+            velY = dy / 10.0f;
         }
     }
 
