@@ -9,4 +9,7 @@ public interface Circle {
     Vector2f getAcceleration();
     void update(float dt, float screenWidth, float screenHeight);
     void applyForce(Vector2f force);
+    void applyTorque(float torque);
+    void updateAngularVelocity(float dt);
+    float getAngularVelocity();
 }

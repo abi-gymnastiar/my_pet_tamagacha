@@ -21,19 +21,19 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     grabLeft2, sleeping0, sleeping1, sleeping2,
                     sleepingLeft0, sleepingLeft1, sleepingLeft2,
                     stretching0, stretchingLeft0, sit1, sit2,
-                    sitLeft1, sitLeft2;
+                    sitLeft1, sitLeft2, lick1, lick2;
     String direction, status;
     Random random = new Random();
     int speed, counter, spriteTick, mouseXOffset, mouseYOffset,
             petWidth, petHeight, xCollision, yCollision,
             fallingSpeed, xMouseGrab, yMouseGrab, sleepTimer,
-            sleepTicker;
+            sleepTicker, randomLickTick;
     int randomNum = 6;
     Bowl bowl; Ball ball;
-    private int lastMouseX;
-    private int lastMouseY;
-    private float velX;
-    private float velY;
+    public int lastMouseX;
+    public int lastMouseY;
+    public float velX;
+    public float velY;
 
     public Pet(MainPanel mp)
     {
@@ -57,6 +57,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         direction = "right";
         fallingSpeed = 7;
         sleepTimer = 3600;
+        randomLickTick = 10;
     }
 
     public void setPetImages()
@@ -88,12 +89,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             walkLeft4 = ImageIO.read(file);
             file = new File("src/main/java/Assets/grab/cat_grab.png");
             grab = ImageIO.read(file);
-            file = new File("src/main/java/Assets/grab/cat_grab_left.png");
-            grabLeft = ImageIO.read(file);
-            file = new File("src/main/java/Assets/grab/cat_grab2.png");
+            file = new File("src/main/java/Assets/grab/cat_grab_2.png");
             grab2 = ImageIO.read(file);
-            file = new File("src/main/java/Assets/grab/cat_grab_left2.png");
-            grabLeft2 = ImageIO.read(file);
             file = new File("src/main/java/Assets/sleep/sleeping_0.png");
             sleeping0 = ImageIO.read(file);
             file = new File("src/main/java/Assets/sleep/sleeping_1.png");
@@ -118,6 +115,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             sitLeft1 = ImageIO.read(file);
             file = new File("src/main/java/Assets/idle/sit_Left_2.png");
             sitLeft2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/lick/cat_lick_1.png");
+            lick1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/lick/cat_lick_2.png");
+            lick2 = ImageIO.read(file);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -145,7 +146,12 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
 
         // starts walking or sleeping
         if (status == "idle" && tick == randomNum) {
-            if (sleepTicker > sleepTimer) {
+            if (random.nextInt(randomLickTick) <= 3) { //test only (delete later)
+                status = "sit";
+                tick = 0;
+                randomNum = 2;
+            }
+            else if (sleepTicker > sleepTimer) {
                 status = "startSleeping";
                 tick = 0;
                 sleepTicker = 0;
@@ -157,6 +163,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 status = "walk";
                 tick = 0;
                 randomNum = random.nextInt(3, 7);
+                randomLickTick--;
             }
         }
         // idle after walking
@@ -238,9 +245,22 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         }
         // getting up from sitting
         if (status == "sit" && tick == randomNum) {
-            status = "idle";
+            if (randomNum == 2) {
+                //pls delete later
+                status = "lick";
+                tick = 0;
+                randomNum = random.nextInt(6, 10);
+                randomLickTick = 10;
+            } else {
+                status = "idle";
+                tick = 0;
+                randomNum = 2;
+            }
+        }
+        if (status == "lick" && tick == randomNum) {
+            status = "sit";
             tick = 0;
-            randomNum = 2;
+            randomNum = random.nextInt(3, 7);
         }
         if (ball != null) {
             this.ball.update(dt, mp.screenWidth, mp.screenHeight);
@@ -250,7 +270,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
 
     @Override
     public void draw(Graphics2D g2) {
-        BufferedImage sprite = null;
+        //BufferedImage sprite = null;
 
         switch (status) {
             case "idle":
@@ -288,14 +308,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 //sprite needs to be changed
                 x = xMouseGrab;
                 y = yMouseGrab;
-                if (direction == "right") {
-                    if (spriteNum == 1 || spriteNum == 3) { sprite = grab; }
-                    if (spriteNum == 2 || spriteNum == 4) { sprite = grab2; }
-                }
-                if (direction == "left") {
-                    if (spriteNum == 1 || spriteNum == 3) { sprite = grabLeft; }
-                    if (spriteNum == 2 || spriteNum == 4) { sprite = grabLeft2; }
-                }
+                if (spriteNum == 1 || spriteNum == 3) { sprite = grab; }
+                if (spriteNum == 2 || spriteNum == 4) { sprite = grab2; }
                 break;
             case "falling":
                 //sprite needs to be changed
@@ -330,14 +344,19 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     if (spriteNum == 1 || spriteNum == 3) { sprite = sitLeft1; }
                     if (spriteNum == 2 || spriteNum == 4) { sprite = sitLeft2; }
                 }
+                break;
+            case "lick":
+                if (direction == "right") {
+                    if (spriteNum == 1 || spriteNum == 3) { sprite = lick1; }
+                    if (spriteNum == 2 || spriteNum == 4) { sprite = lick2; }
+                } else if (direction == "left") {
+                    if (spriteNum == 1 || spriteNum == 3) { sprite = sitLeft1; }
+                    if (spriteNum == 2 || spriteNum == 4) { sprite = sitLeft2; }
+                }
+                break;
         }
         if (ball != null) {
-            g2.drawImage(ball.sprite, (int) ball.getPosition().x, (int) ball.getPosition().y, (int) ball.getRadius(), (int) ball.getRadius(), null);
-            if (ball.ballGrab) {
-
-                ball.position.x = xMouseGrab;
-                ball.position.y = yMouseGrab;
-            }
+            ball.draw(g2);
         }
         g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
         g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
@@ -387,10 +406,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 xMouseGrab = mouseX - 64;
                 yMouseGrab = mouseY - 16;
                 status = "grab";
-            } else if ((mouseX >= ball.getPosition().x && mouseX <= (ball.getPosition().x + ball.getRadius()) &&
-                    mouseY >= ball.getPosition().y && mouseY <= (ball.getPosition().y + ball.getRadius()))) {
-                xMouseGrab = mouseX;
-                yMouseGrab = mouseY;
+            } else if ((mouseX >= (ball.getPosition().x - (ball.getRadius()/2)) && mouseX <= (ball.getPosition().x + (ball.getRadius()/2)) &&
+                    mouseY >= (ball.getPosition().y - (ball.getRadius()/2)) && mouseY <= (ball.getPosition().y + (ball.getRadius()/2)))) {
+                ball.xMouseGrab = mouseX;
+                ball.yMouseGrab = mouseY;
                 ball.ballGrab = true;
             }
         }
@@ -435,8 +454,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             yMouseGrab = mouseY - 16;
         }
         if (ball != null && ball.ballGrab) {
-            xMouseGrab = mouseX;
-            yMouseGrab = mouseY;
+            ball.xMouseGrab = mouseX;
+            ball.yMouseGrab = mouseY;
             int dx = mouseX - lastMouseX;
             int dy = mouseY - lastMouseY;
             lastMouseX = mouseX;

@@ -5,6 +5,8 @@ import Physics.interfaces.Circle;
 import org.joml.Vector2f;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +23,12 @@ public class Ball extends Entity implements Circle {
     public boolean ballGrab;
     public Vector2f dampingForce;
     float damping;
+    private float angularVelocity;
+    private float torque;
+    private float momentOfInertia;
+    public float rotation;
+    public int xMouseGrab, yMouseGrab;
+    public boolean isRotating;
 
     public Ball(MainPanel mp, float radius, Vector2f position, Vector2f velocity, float mass) {
         super(mp);
@@ -31,11 +39,16 @@ public class Ball extends Entity implements Circle {
         this.velocity = new Vector2f(velocity);
         this.acceleration = new Vector2f(0, 0);
         this.mass = mass;
+        this.angularVelocity = 0.0f;
+        this.torque = 0.0f;
+        this.momentOfInertia = 0.5f * mass * radius * radius;
+        this.rotation = 0; // Initialize rotation angle to 0
+        this.isRotating = true;
         setSprite();
     }
 
     public void setSprite() {
-        File file = new File("src/main/java/Assets/balls/ball.png");
+        File file = new File("src/main/java/Assets/balls/Yarn_Ball_2.png");
         try {
             this.sprite = ImageIO.read(file);
         } catch (IOException e) {
@@ -44,12 +57,14 @@ public class Ball extends Entity implements Circle {
     }
 
     public void update(float dt, float screenWidth, float screenHeight) {
+        //System.out.println(ballGrab + "\n" + "ballpos" + position);
         // add gravity
         if (!ballGrab) {
             Vector2f gravity = new Vector2f(0, 0.01f);
             applyForce(gravity);
+            updateAngularVelocity(dt);
             this.velocity.add(this.acceleration.mul(dt));
-
+            this.angularVelocity -= this.angularVelocity * dt;
             // update position based on velocity
             this.position.add(this.velocity.mul(dt));
         }
@@ -81,11 +96,52 @@ public class Ball extends Entity implements Circle {
 
         //System.out.println(velocity);
     }
+    public void draw(Graphics2D g2) {
+
+        if (ballGrab) {
+
+            position.x = xMouseGrab;
+            position.y = yMouseGrab;
+        }
+
+        // Save the current transform
+        AffineTransform savedTransform = g2.getTransform();
+
+        // Apply the translation to the position of the ball
+        g2.translate(position.x, position.y);
+
+        // Apply the rotation to the graphics context
+        g2.rotate(rotation);
+
+        // Draw the ball
+        g2.drawImage(sprite, -sprite.getWidth() / 2, -sprite.getHeight() / 2, null);
+
+        // Restore the previous transform
+        g2.setTransform(savedTransform);
+    }
+
 
     public void applyForce(Vector2f force) {
         // apply force to acceleration
         Vector2f acceleration = force.mul(1.0f / this.mass);
         this.acceleration.add(acceleration);;
+    }
+
+    @Override
+    public void applyTorque(float torque) {
+        this.torque += torque;
+    }
+
+    @Override
+    public void updateAngularVelocity(float dt) {
+        float angularAcceleration = torque / momentOfInertia;
+        angularVelocity += angularAcceleration * dt;
+        torque = 0.0f;
+    }
+
+    @Override
+    public float getAngularVelocity() {
+        return angularVelocity;
     }
 
     public float getRadius() {
@@ -109,5 +165,4 @@ public class Ball extends Entity implements Circle {
         this.velocity = new Vector2f(this.initialVelocity);
         this.acceleration = new Vector2f(0, 0);
     }
-
 }
