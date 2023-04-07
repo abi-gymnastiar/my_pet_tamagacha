@@ -21,7 +21,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     grabLeft2, sleeping0, sleeping1, sleeping2,
                     sleepingLeft0, sleepingLeft1, sleepingLeft2,
                     stretching0, stretchingLeft0, sit1, sit2,
-                    sitLeft1, sitLeft2, lick1, lick2;
+                    sitLeft1, sitLeft2, lick1, lick2, lickLeft1,
+                    lickLeft2;
     String direction, status;
     Random random = new Random();
     int speed, counter, spriteTick, mouseXOffset, mouseYOffset,
@@ -119,6 +120,10 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             lick1 = ImageIO.read(file);
             file = new File("src/main/java/Assets/lick/cat_lick_2.png");
             lick2 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/lick/cat_lick_Left_1.png");
+            lickLeft1 = ImageIO.read(file);
+            file = new File("src/main/java/Assets/lick/cat_lick_Left_2.png");
+            lickLeft2 = ImageIO.read(file);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -350,16 +355,16 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     if (spriteNum == 1 || spriteNum == 3) { sprite = lick1; }
                     if (spriteNum == 2 || spriteNum == 4) { sprite = lick2; }
                 } else if (direction == "left") {
-                    if (spriteNum == 1 || spriteNum == 3) { sprite = sitLeft1; }
-                    if (spriteNum == 2 || spriteNum == 4) { sprite = sitLeft2; }
+                    if (spriteNum == 1 || spriteNum == 3) { sprite = lickLeft1; }
+                    if (spriteNum == 2 || spriteNum == 4) { sprite = lickLeft2; }
                 }
                 break;
         }
+        g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
+        g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
         if (ball != null) {
             ball.draw(g2);
         }
-        g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
-        g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
     }
 
     @Override

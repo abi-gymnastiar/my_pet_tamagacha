@@ -18,7 +18,7 @@ public abstract class Circle {
         this.acceleration = new Vector2f(0, 0);
         this.mass = mass;
         this.angularVelocity = 0.0f;
-        this.torque = 0.0f;
+        this.setTorque(0.0f);
         this.momentOfInertia = 0.5f * mass * radius * radius;
     }
 
@@ -29,13 +29,17 @@ public abstract class Circle {
     }
 
     public void applyTorque(float torque) {
-        this.torque += torque;
+        this.setTorque(this.getTorque() + torque);
     }
+//
+//    public void updateTorque(float dt) {
+//
+//    }
 
     public void updateAngularVelocity(float dt) {
-        float angularAcceleration = torque / momentOfInertia;
+        float angularAcceleration = getTorque() / momentOfInertia;
         angularVelocity += angularAcceleration * dt;
-        torque = 0.0f;
+        setTorque(0.0f);
     }
 
     public float getRadius() {
@@ -56,5 +60,13 @@ public abstract class Circle {
 
     public float getAngularVelocity() {
         return this.angularVelocity;
+    }
+
+    public float getTorque() {
+        return torque;
+    }
+
+    public void setTorque(float torque) {
+        this.torque = torque;
     }
 }

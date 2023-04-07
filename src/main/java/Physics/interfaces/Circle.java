@@ -12,4 +12,6 @@ public interface Circle {
     void applyTorque(float torque);
     void updateAngularVelocity(float dt);
     float getAngularVelocity();
+    void setTorque (float torque);
+    float getTorque ();
 }
