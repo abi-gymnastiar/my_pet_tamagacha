@@ -59,7 +59,6 @@ public class Ball extends Entity implements Circle {
     }
 
     public void update(float dt, float screenWidth, float screenHeight) {
-        System.out.println(torque);
         angularAcceleration = torque / momentOfInertia;
         //System.out.println(ballGrab + "\n" + "ballpos" + position);
         // add gravity
@@ -105,8 +104,6 @@ public class Ball extends Entity implements Circle {
             this.position.y = screenHeight - this.radius - 15;
             this.velocity.y = (-this.velocity.y * 0.9f);
         }
-
-        //System.out.println(velocity);
     }
     public void draw(Graphics2D g2) {
 

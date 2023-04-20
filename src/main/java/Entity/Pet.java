@@ -1,7 +1,6 @@
 package Entity;
 
 import Main.MainPanel;
-import Physics.primitives.Circle;
 import org.joml.Vector2f;
 
 import javax.imageio.ImageIO;
@@ -22,19 +21,20 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     sleepingLeft0, sleepingLeft1, sleepingLeft2,
                     stretching0, stretchingLeft0, sit1, sit2,
                     sitLeft1, sitLeft2, lick1, lick2, lickLeft1,
-                    lickLeft2;
+                    lickLeft2, jump, jumpLeft, fall, fallLeft;
     String direction, status;
     Random random = new Random();
     int speed, counter, spriteTick, mouseXOffset, mouseYOffset,
             petWidth, petHeight, xCollision, yCollision,
             fallingSpeed, xMouseGrab, yMouseGrab, sleepTimer,
-            sleepTicker, randomLickTick;
+            sleepTicker, randomLickTick, jumpCounter, floor;
     int randomNum = 6;
     Bowl bowl; Ball ball;
     public int lastMouseX;
     public int lastMouseY;
     public float velX;
     public float velY;
+    boolean onPlatform = false;
 
     public Pet(MainPanel mp)
     {
@@ -59,6 +59,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         fallingSpeed = 7;
         sleepTimer = 3600;
         randomLickTick = 10;
+        floor = mp.screenHeight - 40;
     }
 
     public void setPetImages()
@@ -124,6 +125,15 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             lickLeft1 = ImageIO.read(file);
             file = new File("src/main/java/Assets/lick/cat_lick_Left_2.png");
             lickLeft2 = ImageIO.read(file);
+            //jump sprites
+            file = new File("src/main/java/Assets/jump/cat_jump.png");
+            jump = ImageIO.read(file);
+            file = new File("src/main/java/Assets/jump/cat_jump_Left.png");
+            jumpLeft = ImageIO.read(file);
+            file = new File("src/main/java/Assets/jump/cat_fall.png");
+            fall = ImageIO.read(file);
+            file = new File("src/main/java/Assets/jump/cat_fall_Left.png");
+            fallLeft = ImageIO.read(file);
         }catch(IOException e){
             e.printStackTrace();
         }
@@ -131,9 +141,9 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
 
     public void update(float dt) {
         xCollision = x+petWidth; yCollision = y+petHeight;
-        //System.out.println(xCollision);
+
+        // Time and Ticks
         counter++;
-        //System.out.println(counter);
         if (counter % 30 == 0) {
             tick++;
             sleepTicker++;
@@ -146,9 +156,23 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             else if (spriteNum == 4)  spriteNum = 1;
             spriteCounter = 0;
         }
-        //System.out.println(tick);
-        //System.out.println(sleepTicker);
 
+        // For debugging
+        if (counter % 30 == 0) {
+            System.out.println("y: "+y);
+            System.out.println("platform y: "+mp.platform.y);
+//            System.out.println("Sprite Num: "+spriteNum);
+//            System.out.println("Tick: "+tick);
+//            System.out.println("SleepTicker: "+sleepTicker);
+//            System.out.println("SleepCountdown"+(sleepTimer - sleepTicker));
+        }
+
+        if (status == "walk") {
+            if (yCollision <= mp.platform.y && x <= mp.platform.x-(petWidth/2)) {
+                onPlatform = false;
+                status = "falling";
+            }
+        }
         // starts walking or sleeping
         if (status == "idle" && tick == randomNum) {
             if (random.nextInt(randomLickTick) <= 3) { //test only (delete later)
@@ -205,13 +229,25 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         }
         // if falling under the floor
         if (status == "falling") {
-            if (yCollision >= (mp.screenHeight - 40)) {
+            floor = mp.screenHeight - 40;
+            if (x + (petWidth/2) > mp.platform.x && yCollision >= mp.platform.y) {
+                status = "tpToPlatform";
+                onPlatform = true;
+            }
+            else if (yCollision >= floor) {
                 status = "tpToFloorY";
             }
         }
+        // tp the pet back to platform
+        if (status == "tpToPlatform" && onPlatform) {
+            y = mp.platform.y - petHeight;
+            tick = 0;
+            randomNum = random.nextInt(5, 15);
+            status = "idle";
+        }
         // tp the pet back to floor
         if (status == "tpToFloorY") {
-            y = mp.screenHeight - (idle1.getHeight() + 40);
+            y = floor - idle1.getHeight();
             tick = 0;
             randomNum = random.nextInt(5, 15);
             status = "idle";
@@ -248,7 +284,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
             tick = 0;
             randomNum = random.nextInt(10, 30);
         }
-        // getting up from sitting
+        // lick or getting up from sitting
         if (status == "sit" && tick == randomNum) {
             if (randomNum == 2) {
                 //pls delete later
@@ -262,6 +298,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 randomNum = 2;
             }
         }
+        // sit from licking
         if (status == "lick" && tick == randomNum) {
             status = "sit";
             tick = 0;
@@ -270,7 +307,8 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
         if (ball != null) {
             this.ball.update(dt, mp.screenWidth, mp.screenHeight);
         }
-
+        jump();
+        jumpToFalling();
     }
 
     @Override
@@ -317,14 +355,11 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 if (spriteNum == 2 || spriteNum == 4) { sprite = grab2; }
                 break;
             case "falling":
-                //sprite needs to be changed
                 y += fallingSpeed;
                 if (direction == "right") {
-                    if (spriteNum == 1 || spriteNum == 3) { sprite = idle1; }
-                    if (spriteNum == 2 || spriteNum == 4) { sprite = idle2; }
+                    sprite = fall;
                 } else if (direction == "left") {
-                    if (spriteNum == 1 || spriteNum == 3) { sprite = idleLeft1; }
-                    if (spriteNum == 2 || spriteNum == 4) { sprite = idleLeft2; }
+                    sprite = fallLeft;
                 }
                 break;
             case "startSleeping": // case "startSleeping" and
@@ -358,12 +393,45 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                     if (spriteNum == 1 || spriteNum == 3) { sprite = lickLeft1; }
                     if (spriteNum == 2 || spriteNum == 4) { sprite = lickLeft2; }
                 }
+            case "jump":
+                jumpAnimation();
                 break;
         }
         g2.drawImage(sprite, x, y, idle1.getWidth(), idle1.getHeight(), null);
         g2.drawImage(bowl.sprite, bowl.x, bowl.y, bowl.bowl_full.getWidth(), bowl.bowl_full.getHeight(), null);
         if (ball != null) {
             ball.draw(g2);
+        }
+    }
+
+    //jump function
+    public void jump() {
+        if (status == "walk"
+                && xCollision > mp.platform.x
+                && xCollision < mp.platform.x + 25
+                && yCollision == mp.screenHeight - 40
+                && randomNum == 5) {
+            status = "jump";
+            tick = 0;
+            randomNum = random.nextInt(3, 7);
+        }
+    }
+    //from jump to idle function
+    public void jumpToFalling() {
+        if (status == "jump" && this.y < mp.platform.y - 180) {
+            status = "falling";
+        }
+    }
+    //jump sprite animation
+    public void jumpAnimation() {
+        if (status == "jump") {
+            if (direction == "right") {
+                sprite = jump;
+            } else if (direction == "left") {
+                sprite = jumpLeft;
+            }
+            y -= fallingSpeed;
+            x += fallingSpeed / 2;
         }
     }
 
@@ -411,7 +479,7 @@ public class Pet extends Entity implements Renderer, MouseListener, MouseMotionL
                 xMouseGrab = mouseX - 64;
                 yMouseGrab = mouseY - 16;
                 status = "grab";
-            } else if ((mouseX >= (ball.getPosition().x - (ball.getRadius()/2)) && mouseX <= (ball.getPosition().x + (ball.getRadius()/2)) &&
+            } else if (ball != null && (mouseX >= (ball.getPosition().x - (ball.getRadius()/2)) && mouseX <= (ball.getPosition().x + (ball.getRadius()/2)) &&
                     mouseY >= (ball.getPosition().y - (ball.getRadius()/2)) && mouseY <= (ball.getPosition().y + (ball.getRadius()/2)))) {
                 ball.xMouseGrab = mouseX;
                 ball.yMouseGrab = mouseY;

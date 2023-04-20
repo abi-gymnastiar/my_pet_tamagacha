@@ -1,6 +1,7 @@
 package Main;
 
 import Entity.Pet;
+import Entity.Platform;
 
 import javax.swing.JPanel;
 import java.awt.*;
@@ -12,6 +13,7 @@ public class MainPanel extends JPanel implements Runnable{
     Thread gameThread;
 
     Pet pet = new Pet(this);
+    public Platform platform = new Platform(this, 240, 280);
 
     MainPanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -68,5 +70,6 @@ public class MainPanel extends JPanel implements Runnable{
         g.fillRect(0, 0, screenWidth, screenHeight);
 
         pet.draw(g2);
+        platform.draw(g2);
     }
 }

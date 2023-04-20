@@ -15,4 +15,5 @@ Some interaction and behavior available as of right now includes:
 - 🐱‍🏍Tama can be dragged around the screen (if she gets dragged outside the screen, she will simply walk back)
 - 🛏️ Tama will sleep if she's tired
 - 🧶 Right click to spawn a ball of yarn that implements a basic 2D physics
+- 🐾 Tama can jump or be dragged to a platform
 - 🐱‍💻More will be added soon... 🐾🐾🐾🐾🐾
